@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CYBERAUDIT PRO — Dashboard</title>
+  <link rel="stylesheet" href="cyberaudit.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    /* ── Grillas específicas ── */
+    .charts-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .bottom-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    /* ── Gráfica de línea SVG ── */
+    .chart-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 18px;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+
+    .chart-svg {
+      width: 100%; height: 100px;
+      overflow: visible;
+    }
+
+    .chart-stat {
+      font-size: 12px; margin-top: 4px;
+    }
+
+    /* ── Estado de servicios ── */
+    .services-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .service-row {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 12px; color: var(--text2);
+    }
+
+    /* ── Recursos del sistema ── */
+    .resource-item {
+      margin-bottom: 14px;
+    }
+
+    .resource-header {
+      display: flex; justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: 11px; color: var(--text2);
+      margin-bottom: 5px;
+    }
+
+    .resource-pct {
+      color: var(--text); font-weight: 600;
+    }
+
+    .progress-track {
+      width: 100%; height: 6px;
+      background: var(--bg-elevated);
+      border-radius: 6px; overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%; border-radius: 6px;
+      transition: width 0.6s ease;
+    }
+
+    .progress-fill.cpu  { background: linear-gradient(90deg, var(--cyan2), var(--cyan)); }
+    .progress-fill.ram  { background: linear-gradient(90deg, #7c3aed, var(--purple)); }
+    .progress-fill.disk { background: linear-gradient(90deg, #059669, var(--green)); }
+
+    /* ── Kpi delta ── */
+    .kpi-delta {
+      font-size: 11px; color: var(--text2); margin-top: 4px;
+    }
+    .kpi-delta .up   { color: var(--red); }
+    .kpi-delta .down { color: var(--green); }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon"><i class="fa-solid fa-shield-halved"></i></div>
+      <div class="brand-text">
+        <div class="brand-name">CYBERAUDIT</div>
+        <div class="brand-ver">PRO v2.4.1</div>
+      </div>
+    </div>
+
+    <div class="sidebar-status">
+      <div class="status-row"><span class="dot dot-green"></span> Sistema Operativo</div>
+      <div class="status-row"><span class="dot dot-cyan"></span> Monitoreo Activo</div>
+    </div>
+
+    <div class="sidebar-section-label">Módulos</div>
+    <nav>
+      <a href="dashboard.html" class="nav-item active">
+        <i class="fa-solid fa-chart-line"></i> Dashboard
+        <span class="rf-badge">RF2</span>
+      </a>
+      <a href="escaneo.html" class="nav-item">
+        <i class="fa-solid fa-radar"></i> Escaneo
+        <span class="rf-badge">RF3</span>
+      </a>
+      <a href="Controlador?accion=listar" class="nav-item">
+        <i class="fa-solid fa-triangle-exclamation"></i> Amenazas
+        <span class="rf-badge rf-red">RF5</span>
+      </a>
+      <a href="reportes.html" class="nav-item">
+        <i class="fa-regular fa-file-lines"></i> Reportes
+        <span class="rf-badge rf-green">RF6</span>
+      </a>
+      <a href="network.html" class="nav-item">
+        <i class="fa-solid fa-network-wired"></i> Red / Firewall
+        <span class="rf-badge rf-purple">RF7</span>
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user">admin@cyberaudit.com</div>
+      <button class="btn-logout" onclick="location.href='index.html'">
+        <i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión
+      </button>
+    </div>
+  </aside>
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="topbar-path">
+      <span class="prompt">&gt;</span>
+      <span class="path">/dashboard</span>
+      <span class="rf-badge">RF-2</span>
+      <span class="rf-badge">RNF1</span>
+      <span class="rf-badge">RNF2</span>
+    </div>
+    <div class="topbar-spacer"></div>
+    <div class="topbar-status">
+      <span class="online-dot"></span>
+      <span>EN LÍNEA</span>
+    </div>
+    <div class="topbar-time">
+      <i class="fa-regular fa-clock"></i>
+      <span id="clock">--:--:-- p. m.</span>
+    </div>
+  </header>
+
+  <!-- CONTENT -->
+  <main class="content">
+
+    <!-- KPIs × 4 -->
+    <div class="kpi-grid-4">
+      <div class="kpi-card">
+        <div class="kpi-left">
+          <div class="kpi-label">Amenazas Detectadas</div>
+          <div class="kpi-value red">14</div>
+          <div class="kpi-delta"><span class="up">+3 hoy</span></div>
+        </div>
+        <div class="kpi-icon red"><i class="fa-solid fa-triangle-exclamation"></i></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-left">
+          <div class="kpi-label">Archivos Escaneados</div>
+          <div class="kpi-value cyan">1.2M</div>
+          <div class="kpi-delta"><span class="text-cyan">+48k hoy</span></div>
+        </div>
+        <div class="kpi-icon cyan"><i class="fa-solid fa-hard-drive"></i></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-left">
+          <div class="kpi-label">Eventos de Red</div>
+          <div class="kpi-value purple">3847</div>
+          <div class="kpi-delta" style="color:var(--text2);">últimas 24h</div>
+        </div>
+        <div class="kpi-icon purple"><i class="fa-solid fa-globe"></i></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-left">
+          <div class="kpi-label">Políticas Activas</div>
+          <div class="kpi-value green">28</div>
+          <div class="kpi-delta" style="color:var(--green);">todas OK</div>
+        </div>
+        <div class="kpi-icon green"><i class="fa-solid fa-circle-check"></i></div>
+      </div>
+    </div>
+
+    <!-- Gráficas × 3 -->
+    <div class="charts-row">
+
+      <!-- Tráfico de red -->
+      <div class="chart-card">
+        <div class="card-title">Tráfico de Red (Mbps)</div>
+        <svg class="chart-svg" viewBox="0 0 200 80" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="gc" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#17c3f5" stop-opacity="0.35"/>
+              <stop offset="100%" stop-color="#17c3f5" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <!-- Área rellena -->
+          <polygon fill="url(#gc)"
+            points="0,70 20,55 40,60 60,40 80,45 100,30 120,38 140,25 160,35 180,20 200,30 200,80 0,80"/>
+          <!-- Línea -->
+          <polyline fill="none" stroke="#17c3f5" stroke-width="2" stroke-linejoin="round"
+            points="0,70 20,55 40,60 60,40 80,45 100,30 120,38 140,25 160,35 180,20 200,30"/>
+          <!-- Puntos -->
+          <circle cx="100" cy="30" r="3" fill="#17c3f5"/>
+          <circle cx="180" cy="20" r="3" fill="#17c3f5"/>
+        </svg>
+        <div class="chart-stat text-cyan">↑ 72 Mbps promedio</div>
+      </div>
+
+      <!-- Uso de CPU -->
+      <div class="chart-card">
+        <div class="card-title">Uso de CPU (%)</div>
+        <svg class="chart-svg" viewBox="0 0 200 80" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="gp" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#9b59ff" stop-opacity="0.35"/>
+              <stop offset="100%" stop-color="#9b59ff" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <polygon fill="url(#gp)"
+            points="0,75 20,60 40,50 60,65 80,40 100,30 120,45 140,35 160,50 180,40 200,55 200,80 0,80"/>
+          <polyline fill="none" stroke="#9b59ff" stroke-width="2" stroke-linejoin="round"
+            points="0,75 20,60 40,50 60,65 80,40 100,30 120,45 140,35 160,50 180,40 200,55"/>
+          <circle cx="100" cy="30" r="3" fill="#9b59ff"/>
+        </svg>
+        <div class="chart-stat text-muted">↑ 67% actual</div>
+      </div>
+
+      <!-- Amenazas por hora -->
+      <div class="chart-card">
+        <div class="card-title">Amenazas por Hora</div>
+        <svg class="chart-svg" viewBox="0 0 200 80" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="gr" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#ff3355" stop-opacity="0.35"/>
+              <stop offset="100%" stop-color="#ff3355" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <polygon fill="url(#gr)"
+            points="0,75 15,70 25,55 35,65 50,45 65,60 80,35 95,50 110,30 125,45 140,20 155,38 170,25 185,40 200,30 200,80 0,80"/>
+          <polyline fill="none" stroke="#ff3355" stroke-width="2" stroke-linejoin="round"
+            points="0,75 15,70 25,55 35,65 50,45 65,60 80,35 95,50 110,30 125,45 140,20 155,38 170,25 185,40 200,30"/>
+          <circle cx="140" cy="20" r="3" fill="#ff3355"/>
+        </svg>
+        <div class="chart-stat text-red">△ 14 detectadas hoy</div>
+      </div>
+
+    </div>
+
+    <!-- Fila inferior: Servicios + Recursos -->
+    <div class="bottom-row">
+
+      <!-- Estado de Servicios -->
+      <div class="card">
+        <div class="card-title">
+          Estado de Servicios (Indicadores LED)
+          <span class="rf-badge">RNF1</span>
+        </div>
+        <div class="services-grid">
+          <div class="service-row"><span class="dot dot-green"></span> Firewall Engine</div>
+          <div class="service-row"><span class="dot dot-green"></span> IDS/IPS Module</div>
+          <div class="service-row"><span class="dot dot-green"></span> AV Scanner</div>
+          <div class="service-row"><span class="dot dot-green"></span> Log Aggregator</div>
+          <div class="service-row"><span class="dot dot-green"></span> Crypto Service</div>
+          <div class="service-row"><span class="dot dot-green"></span> Backup Agent</div>
+        </div>
+      </div>
+
+      <!-- Recursos del sistema -->
+      <div class="card">
+        <div class="card-title">
+          Recursos del Sistema
+          <span class="rf-badge">RNF2</span>
+        </div>
+
+        <div class="resource-item">
+          <div class="resource-header">
+            <span><i class="fa-solid fa-microchip" style="margin-right:6px;color:var(--cyan)"></i>CPU</span>
+            <span class="resource-pct">67%</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill cpu" style="width:67%"></div>
+          </div>
+        </div>
+
+        <div class="resource-item">
+          <div class="resource-header">
+            <span><i class="fa-solid fa-memory" style="margin-right:6px;color:var(--purple)"></i>RAM</span>
+            <span class="resource-pct">69%</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill ram" style="width:69%"></div>
+          </div>
+        </div>
+
+        <div class="resource-item" style="margin-bottom:0">
+          <div class="resource-header">
+            <span><i class="fa-solid fa-hard-drive" style="margin-right:6px;color:var(--green)"></i>Disco</span>
+            <span class="resource-pct">47%</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill disk" style="width:47%"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+</div>
+
+<script>
+  /* Reloj en tiempo real */
+  function updateClock() {
+    const now = new Date();
+    document.getElementById('clock').textContent =
+      now.toLocaleTimeString('es-CO', { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true });
+  }
+  setInterval(updateClock, 1000);
+  updateClock();
+</script>
+</body>
+</html>

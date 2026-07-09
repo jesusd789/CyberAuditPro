@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CYBERAUDIT PRO — Reportes</title>
+  <link rel="stylesheet" href="cyberaudit.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    /* ── Sección de encriptación ── */
+    .encrypt-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 18px 20px;
+      display: flex; align-items: center; gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .encrypt-body { flex: 1; }
+
+    .encrypt-title {
+      font-family: var(--font-ui);
+      font-size: 14px; font-weight: 600;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .encrypt-title .highlight {
+      color: var(--cyan);
+      background: #17c3f515; border-radius: 4px;
+      padding: 1px 5px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+    }
+
+    .encrypt-sub {
+      font-family: var(--font-mono);
+      font-size: 10px; color: var(--text2);
+    }
+
+    .encrypt-status {
+      display: flex; align-items: center; gap: 8px;
+      font-family: var(--font-mono);
+      font-size: 11px; font-weight: 700;
+      color: var(--green);
+      flex-shrink: 0;
+    }
+
+    /* Barra de información de encriptación */
+    .encrypt-info-bar {
+      display: flex; align-items: center; gap: 8px;
+      background: #00e67608;
+      border: 1px solid #00e67620;
+      border-radius: var(--radius);
+      padding: 10px 14px;
+      margin-bottom: 18px;
+      font-family: var(--font-mono);
+      font-size: 11px; color: var(--green);
+    }
+
+    .encrypt-info-bar i { color: var(--green); font-size: 13px; }
+
+    /* Lista de reportes */
+    .reports-list {
+      display: flex; flex-direction: column; gap: 0;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .report-item {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      padding: 16px 20px;
+      display: flex; align-items: center; gap: 14px;
+      transition: background 0.15s;
+    }
+
+    .report-item:last-child { border-bottom: none; }
+    .report-item:hover { background: var(--bg-elevated); }
+
+    .report-icon {
+      font-size: 16px; color: var(--cyan); flex-shrink: 0;
+    }
+
+    .report-body { flex: 1; }
+
+    .report-name {
+      font-family: var(--font-ui);
+      font-size: 14px; font-weight: 600;
+      color: var(--text);
+      display: flex; align-items: center; gap: 6px;
+      margin-bottom: 3px;
+    }
+
+    .report-lock {
+      font-size: 12px; color: var(--green);
+    }
+
+    .report-meta {
+      font-family: var(--font-mono);
+      font-size: 10px; color: var(--text2);
+    }
+
+    /* Botones de descarga */
+    .report-actions { display: flex; gap: 8px; flex-shrink: 0; }
+
+    .btn-pdf {
+      padding: 7px 14px; border-radius: 6px;
+      background: #ff335518; color: var(--red);
+      border: 1px solid #ff335535;
+      font-family: var(--font-mono);
+      font-size: 10px; font-weight: 700;
+      cursor: pointer; display: flex; align-items: center; gap: 5px;
+      transition: all 0.18s;
+    }
+    .btn-pdf:hover { background: var(--red); color: #fff; }
+
+    .btn-json {
+      padding: 7px 14px; border-radius: 6px;
+      background: #17c3f518; color: var(--cyan);
+      border: 1px solid #17c3f535;
+      font-family: var(--font-mono);
+      font-size: 10px; font-weight: 700;
+      cursor: pointer; display: flex; align-items: center; gap: 5px;
+      transition: all 0.18s;
+    }
+    .btn-json:hover { background: var(--cyan); color: #000; }
+
+    /* Nuevo reporte */
+    .new-report-card {
+      background: var(--bg-card);
+      border: 2px dashed var(--border-bright);
+      border-radius: var(--radius-lg);
+      padding: 22px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      margin-top: 14px;
+    }
+    .new-report-card:hover {
+      border-color: var(--cyan);
+      background: #17c3f508;
+    }
+
+    .new-report-card i {
+      font-size: 22px; color: var(--text3);
+      margin-bottom: 8px; display: block;
+    }
+
+    .new-report-card span {
+      font-family: var(--font-mono);
+      font-size: 11px; color: var(--text2);
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon"><i class="fa-solid fa-shield-halved"></i></div>
+      <div class="brand-text">
+        <div class="brand-name">CYBERAUDIT</div>
+        <div class="brand-ver">PRO v2.4.1</div>
+      </div>
+    </div>
+    <div class="sidebar-status">
+      <div class="status-row"><span class="dot dot-green"></span> Sistema Operativo</div>
+      <div class="status-row"><span class="dot dot-cyan"></span> Monitoreo Activo</div>
+    </div>
+    <div class="sidebar-section-label">Módulos</div>
+    <nav>
+      <a href="dashboard.html" class="nav-item">
+        <i class="fa-solid fa-chart-line"></i> Dashboard <span class="rf-badge">RF2</span>
+      </a>
+      <a href="escaneo.html" class="nav-item">
+        <i class="fa-solid fa-radar"></i> Escaneo <span class="rf-badge">RF3</span>
+      </a>
+      <a href="Controlador?accion=listar" class="nav-item">
+        <i class="fa-solid fa-triangle-exclamation"></i> Amenazas <span class="rf-badge rf-red">RF5</span>
+      </a>
+      <a href="reportes.html" class="nav-item active">
+        <i class="fa-regular fa-file-lines"></i> Reportes <span class="rf-badge rf-green">RF6</span>
+      </a>
+      <a href="network.html" class="nav-item">
+        <i class="fa-solid fa-network-wired"></i> Red / Firewall <span class="rf-badge rf-purple">RF7</span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">admin@cyberaudit.com</div>
+      <button class="btn-logout" onclick="location.href='index.html'">
+        <i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión
+      </button>
+    </div>
+  </aside>
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="topbar-path">
+      <span class="prompt">&gt;</span>
+      <span class="path">/reports</span>
+      <span class="rf-badge rf-green">RF6</span>
+    </div>
+    <div class="topbar-spacer"></div>
+    <div class="topbar-status">
+      <span class="online-dot"></span><span>EN LÍNEA</span>
+    </div>
+    <div class="topbar-time">
+      <i class="fa-regular fa-clock"></i>
+      <span id="clock">--:--:--</span>
+    </div>
+  </header>
+
+  <!-- CONTENT -->
+  <main class="content">
+    <div class="page-title">
+      Reportes Encriptados
+      <span class="rf-badge rf-green" style="font-size:11px;vertical-align:middle;">RF6</span>
+    </div>
+
+    <!-- Toggle de encriptación -->
+    <div class="encrypt-card">
+      <div class="encrypt-body">
+        <div class="encrypt-title">
+          Habilitar Encriptación <span class="highlight">AES-256</span>
+        </div>
+        <div class="encrypt-sub">
+          Los reportes exportados serán cifrados con AES-256-GCM antes de generarse.
+          <span class="rf-badge" style="font-size:8px;margin-left:4px;">RF6</span>
+        </div>
+      </div>
+      <div class="encrypt-status">
+        ACTIVO
+        <div class="toggle-wrap">
+          <label class="toggle">
+            <input type="checkbox" id="encrypt-toggle" checked onchange="toggleEncrypt(this)"/>
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Barra de info de encriptación -->
+    <div class="encrypt-info-bar" id="encrypt-bar">
+      <i class="fa-solid fa-lock"></i>
+      Modo de encriptación AES-256-GCM habilitado · Clave derivada con PBKDF2-SHA512 · IV aleatorio por exportación
+    </div>
+
+    <!-- Lista de reportes -->
+    <div class="reports-list">
+
+      <div class="report-item">
+        <i class="fa-regular fa-file-lines report-icon"></i>
+        <div class="report-body">
+          <div class="report-name">
+            Auditoría de Seguridad — Junio 2025
+            <i class="fa-solid fa-lock report-lock"></i>
+          </div>
+          <div class="report-meta">2025-06-10 · 3,847 eventos · Completado</div>
+        </div>
+        <div class="report-actions">
+          <button class="btn-pdf" onclick="fakeDownload('Auditoria_Jun2025.pdf')">
+            <i class="fa-solid fa-file-arrow-down"></i> PDF
+          </button>
+          <button class="btn-json" onclick="fakeDownload('Auditoria_Jun2025.json')">
+            <i class="fa-solid fa-file-arrow-down"></i> JSON
+          </button>
+        </div>
+      </div>
+
+      <div class="report-item">
+        <i class="fa-regular fa-file-lines report-icon"></i>
+        <div class="report-body">
+          <div class="report-name">
+            Reporte de Amenazas — Mayo 2025
+            <i class="fa-solid fa-lock report-lock"></i>
+          </div>
+          <div class="report-meta">2025-05-31 · 2,194 eventos · Completado</div>
+        </div>
+        <div class="report-actions">
+          <button class="btn-pdf" onclick="fakeDownload('Amenazas_May2025.pdf')">
+            <i class="fa-solid fa-file-arrow-down"></i> PDF
+          </button>
+          <button class="btn-json" onclick="fakeDownload('Amenazas_May2025.json')">
+            <i class="fa-solid fa-file-arrow-down"></i> JSON
+          </button>
+        </div>
+      </div>
+
+      <div class="report-item">
+        <i class="fa-regular fa-file-lines report-icon"></i>
+        <div class="report-body">
+          <div class="report-name">
+            Análisis de Firewall Q2 2025
+            <i class="fa-solid fa-lock report-lock"></i>
+          </div>
+          <div class="report-meta">2025-06-01 · 5,021 eventos · Completado</div>
+        </div>
+        <div class="report-actions">
+          <button class="btn-pdf" onclick="fakeDownload('Firewall_Q2_2025.pdf')">
+            <i class="fa-solid fa-file-arrow-down"></i> PDF
+          </button>
+          <button class="btn-json" onclick="fakeDownload('Firewall_Q2_2025.json')">
+            <i class="fa-solid fa-file-arrow-down"></i> JSON
+          </button>
+        </div>
+      </div>
+
+      <div class="report-item">
+        <i class="fa-regular fa-file-lines report-icon"></i>
+        <div class="report-body">
+          <div class="report-name">
+            Escaneo de Vulnerabilidades — Abril 2025
+            <i class="fa-solid fa-lock report-lock"></i>
+          </div>
+          <div class="report-meta">2025-04-15 · 892 eventos · Completado</div>
+        </div>
+        <div class="report-actions">
+          <button class="btn-pdf" onclick="fakeDownload('Vulnerabilidades_Abr2025.pdf')">
+            <i class="fa-solid fa-file-arrow-down"></i> PDF
+          </button>
+          <button class="btn-json" onclick="fakeDownload('Vulnerabilidades_Abr2025.json')">
+            <i class="fa-solid fa-file-arrow-down"></i> JSON
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Botón de nuevo reporte -->
+    <div class="new-report-card" onclick="generateReport()">
+      <i class="fa-solid fa-plus"></i>
+      <span>Generar nuevo reporte encriptado</span>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  setInterval(() => {
+    document.getElementById('clock').textContent =
+      new Date().toLocaleTimeString('es-CO', { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true });
+  }, 1000);
+
+  function toggleEncrypt(cb) {
+    const bar = document.getElementById('encrypt-bar');
+    const label = document.querySelector('.encrypt-status');
+    if (cb.checked) {
+      bar.style.display = 'flex';
+      label.style.color = 'var(--green)';
+    } else {
+      bar.style.display = 'none';
+      label.style.color = 'var(--text2)';
+    }
+    label.childNodes[0].textContent = cb.checked ? 'ACTIVO' : 'INACTIVO';
+  }
+
+  function fakeDownload(filename) {
+    const a = document.createElement('a');
+    a.href = 'data:text/plain;charset=utf-8,' +
+      encodeURIComponent(`CYBERAUDIT PRO — Reporte exportado: ${filename}\nFecha: ${new Date().toISOString()}\n[Contenido cifrado AES-256-GCM]`);
+    a.download = filename;
+    a.click();
+  }
+
+  function generateReport() {
+    alert('Generando nuevo reporte encriptado…\n(Funcionalidad de demostración)');
+  }
+</script>
+</body>
+</html>

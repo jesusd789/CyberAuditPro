@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CYBERAUDIT PRO — Inicio de Sesión</title>
+  <link rel="stylesheet" href="cyberaudit.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    /* ── Override: la página de login NO usa el layout app ── */
+    html, body { overflow: hidden; }
+
+    body {
+      background: var(--bg-void);
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh;
+      position: relative;
+    }
+
+    /* Fondo con patrón de cuadrícula */
+    body::before {
+      content: '';
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 40px 40px;
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    /* Gradiente radial central */
+    body::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: radial-gradient(ellipse 60% 60% at 50% 50%,
+        #0a1e4040 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    /* ── Contenedor del formulario ── */
+    .login-wrap {
+      position: relative; z-index: 1;
+      display: flex; flex-direction: column;
+      align-items: center; gap: 24px;
+      width: 100%; max-width: 440px;
+      padding: 0 20px;
+    }
+
+    /* Logo / ícono superior */
+    .login-logo {
+      width: 72px; height: 72px;
+      border-radius: 20px;
+      background: linear-gradient(135deg, #1e6fc8, #4a90e2, #17c3f5);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 32px; color: #fff;
+      box-shadow: 0 0 30px #17c3f540, 0 10px 30px #00000060;
+    }
+
+    /* Nombre y subtítulo */
+    .login-title {
+      text-align: center;
+    }
+
+    .login-title h1 {
+      font-family: var(--font-mono);
+      font-size: 22px; font-weight: 700;
+      color: #fff; letter-spacing: 0.12em;
+      margin-bottom: 5px;
+    }
+
+    /* Cursor parpadeante en el título */
+    .login-title h1 span.cursor {
+      display: inline-block;
+      width: 2px; height: 20px;
+      background: var(--cyan);
+      margin-left: 2px; vertical-align: middle;
+      animation: cursor-blink 1s step-end infinite;
+    }
+    @keyframes cursor-blink { 0%,100%{opacity:1} 50%{opacity:0} }
+
+    .login-title p {
+      font-family: var(--font-mono);
+      font-size: 10px; letter-spacing: 0.2em;
+      color: var(--text2); text-transform: uppercase;
+      margin-bottom: 10px;
+    }
+
+    .login-title .badges {
+      display: flex; align-items: center;
+      justify-content: center; gap: 6px;
+    }
+
+    .login-badge {
+      font-family: var(--font-mono);
+      font-size: 9px; font-weight: 700;
+      padding: 3px 8px; border-radius: 4px;
+      border: 1px solid #17c3f540;
+      color: var(--cyan);
+      background: #17c3f510;
+    }
+
+    /* Tarjeta del formulario */
+    .login-card {
+      width: 100%;
+      background: var(--bg-card);
+      border: 1px solid var(--border-bright);
+      border-radius: 16px;
+      padding: 28px;
+      box-shadow: 0 20px 60px #00000060, 0 0 0 1px #17c3f510;
+    }
+
+    /* Grupo de campo */
+    .field-group {
+      display: flex; flex-direction: column;
+      gap: 5px; margin-bottom: 16px;
+    }
+
+    .field-label {
+      font-family: var(--font-mono);
+      font-size: 9px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.14em;
+      color: var(--text2);
+    }
+
+    .field-input-wrap {
+      position: relative;
+      display: flex; align-items: center;
+    }
+
+    .field-icon {
+      position: absolute; left: 12px;
+      color: var(--text3); font-size: 13px;
+      pointer-events: none;
+    }
+
+    .field-input {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--border-bright);
+      border-radius: var(--radius);
+      padding: 11px 40px 11px 36px;
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    .field-input:focus {
+      border-color: var(--cyan);
+      box-shadow: 0 0 0 3px #17c3f518;
+    }
+
+    .field-input::placeholder { color: var(--text3); font-size: 12px; }
+
+    /* Botón ojo en contraseña */
+    .eye-btn {
+      position: absolute; right: 10px;
+      background: none; border: none;
+      color: var(--text3); font-size: 13px;
+      cursor: pointer; padding: 4px;
+      transition: color 0.18s;
+    }
+    .eye-btn:hover { color: var(--cyan); }
+
+    /* Token MFA */
+    .mfa-wrap {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--bg-input);
+      border: 1px solid var(--border-bright);
+      border-radius: var(--radius);
+      padding: 10px 14px;
+    }
+
+    .mfa-timer {
+      font-size: 18px; color: var(--cyan);
+      animation: spin 30s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .mfa-digits {
+      flex: 1; display: flex; align-items: center; justify-content: center;
+      gap: 6px;
+    }
+
+    .mfa-input {
+      width: 36px; height: 36px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-bright);
+      border-radius: 6px;
+      text-align: center;
+      font-family: var(--font-mono);
+      font-size: 16px; font-weight: 700;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .mfa-input:focus { border-color: var(--cyan); }
+
+    .mfa-sep {
+      font-family: var(--font-mono);
+      font-size: 18px; color: var(--text3);
+    }
+
+    /* Botón de login */
+    .btn-login {
+      width: 100%; padding: 13px;
+      background: linear-gradient(90deg, var(--cyan2), #4a7fff);
+      border: none; border-radius: var(--radius);
+      color: #fff;
+      font-family: var(--font-mono);
+      font-size: 13px; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      transition: all 0.2s;
+      box-shadow: 0 4px 20px #00a8e840;
+      margin-top: 6px;
+      position: relative; overflow: hidden;
+    }
+
+    .btn-login::before {
+      content: '';
+      position: absolute; top:0; left:-100%; width:100%; height:100%;
+      background: linear-gradient(90deg, transparent, #ffffff20, transparent);
+      transition: left 0.5s;
+    }
+    .btn-login:hover::before { left: 100%; }
+    .btn-login:hover { box-shadow: 0 6px 30px #17c3f560; }
+
+    /* Indicador de conexión segura */
+    .secure-indicator {
+      display: flex; align-items: center; justify-content: center;
+      gap: 6px; margin-top: 14px;
+      font-family: var(--font-mono);
+      font-size: 10px; color: var(--text3);
+    }
+
+    .secure-indicator .dot-green { animation: blink 2s ease infinite; }
+
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.4} }
+
+  </style>
+</head>
+<body>
+
+  <div class="login-wrap">
+
+    <!-- Logo -->
+    <div class="login-logo">
+      <i class="fa-solid fa-shield-halved"></i>
+    </div>
+
+    <!-- Título -->
+    <div class="login-title">
+      <h1>CYBERAUDIT_PRO<span class="cursor"></span></h1>
+      <p>Sistema de Auditoría Avanzada</p>
+      <div class="badges">
+        <span class="login-badge">RF1</span>
+        <span class="login-badge">IEEE 830</span>
+      </div>
+    </div>
+
+    <!-- Tarjeta de login -->
+    <div class="login-card">
+
+      <!-- Usuario -->
+      <div class="field-group">
+        <label class="field-label" for="email">Identificador de Usuario</label>
+        <div class="field-input-wrap">
+          <i class="fa-regular fa-user field-icon"></i>
+          <input class="field-input" id="email" type="email"
+            placeholder="admin@cyberaudit.com" value="admin@cyberaudit.com" autocomplete="off"/>
+        </div>
+      </div>
+
+      <!-- Contraseña -->
+      <div class="field-group">
+        <label class="field-label" for="pwd">Contraseña</label>
+        <div class="field-input-wrap">
+          <i class="fa-solid fa-lock field-icon"></i>
+          <input class="field-input" id="pwd" type="password"
+            value="••••••••••••" autocomplete="off"/>
+          <button class="eye-btn" onclick="togglePwd()" aria-label="Mostrar contraseña">
+            <i class="fa-regular fa-eye" id="eye-icon"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Token MFA -->
+      <div class="field-group">
+        <label class="field-label">Token de Autenticación MFA</label>
+        <div class="mfa-wrap">
+          <i class="fa-regular fa-clock mfa-timer" id="mfa-timer"></i>
+          <div class="mfa-digits">
+            <input class="mfa-input" maxlength="1" type="text" id="mfa0" oninput="mfaNext(this,1)"/>
+            <input class="mfa-input" maxlength="1" type="text" id="mfa1" oninput="mfaNext(this,2)"/>
+            <input class="mfa-input" maxlength="1" type="text" id="mfa2" oninput="mfaNext(this,3)"/>
+            <span class="mfa-sep">·</span>
+            <input class="mfa-input" maxlength="1" type="text" id="mfa3" oninput="mfaNext(this,4)"/>
+            <input class="mfa-input" maxlength="1" type="text" id="mfa4" oninput="mfaNext(this,5)"/>
+            <input class="mfa-input" maxlength="1" type="text" id="mfa5"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- Botón de acceso -->
+      <button class="btn-login" onclick="doLogin()">
+        <i class="fa-solid fa-lock"></i>
+        Acceder al Sistema
+      </button>
+
+      <!-- Indicador TLS -->
+      <div class="secure-indicator">
+        <span class="dot dot-green"></span>
+        Conexión cifrada TLS 1.3 · AES-256
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    /* ── Clock en header MFA ── */
+    function updateTimer() {
+      const el = document.getElementById('mfa-timer');
+      const now = new Date();
+      const secs = now.getSeconds();
+      const pct = (secs / 60) * 360;
+      // Solo rotar visualmente
+      el.style.transform = `rotate(${pct}deg)`;
+    }
+    setInterval(updateTimer, 1000);
+    updateTimer();
+
+    /* ── Toggle contraseña ── */
+    function togglePwd() {
+      const input = document.getElementById('pwd');
+      const icon  = document.getElementById('eye-icon');
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.className = 'fa-regular fa-eye-slash';
+      } else {
+        input.type = 'password';
+        icon.className = 'fa-regular fa-eye';
+      }
+    }
+
+    /* ── Avance automático en MFA ── */
+    function mfaNext(el, nextIdx) {
+      if (el.value.length === 1 && nextIdx <= 5) {
+        document.getElementById('mfa' + nextIdx).focus();
+      }
+    }
+
+    /* ── Login → redirige al dashboard ── */
+    function doLogin() {
+      const btn = document.querySelector('.btn-login');
+      btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Verificando…';
+      btn.disabled = true;
+      setTimeout(() => {
+        window.location.href = 'dashboard.html';
+      }, 1200);
+    }
+
+    /* ── Enter en campos ── */
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter') doLogin();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CYBERAUDIT PRO — Escaneo</title>
+  <link rel="stylesheet" href="cyberaudit.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    .scan-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    /* ── Panel izquierdo ── */
+    .scan-left { display: flex; flex-direction: column; gap: 16px; }
+
+    /* Selector de tipo de escaneo */
+    .scan-types {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .scan-type-card {
+      background: var(--bg-card);
+      border: 2px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex; flex-direction: column;
+      align-items: center; gap: 10px;
+    }
+
+    .scan-type-card:hover { border-color: var(--cyan); }
+
+    .scan-type-card.selected {
+      border-color: var(--purple);
+      background: #9b59ff10;
+    }
+
+    .scan-type-icon {
+      font-size: 28px;
+    }
+
+    .scan-type-card:not(.selected) .scan-type-icon { color: var(--cyan); }
+    .scan-type-card.selected       .scan-type-icon { color: var(--purple); }
+
+    .scan-type-name {
+      font-family: var(--font-ui);
+      font-size: 14px; font-weight: 600;
+    }
+
+    .scan-type-card:not(.selected) .scan-type-name { color: var(--cyan); }
+    .scan-type-card.selected        .scan-type-name { color: var(--purple); }
+
+    .scan-type-desc {
+      font-family: var(--font-mono);
+      font-size: 10px; color: var(--text2);
+      line-height: 1.4;
+    }
+
+    /* Círculo de progreso */
+    .progress-wrap {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 20px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 30px;
+      flex: 1;
+    }
+
+    .circle-svg {
+      width: 180px; height: 180px;
+    }
+
+    .circle-track {
+      fill: none; stroke: var(--bg-elevated);
+      stroke-width: 10;
+    }
+
+    .circle-fill {
+      fill: none; stroke: var(--green);
+      stroke-width: 10; stroke-linecap: round;
+      stroke-dasharray: 502.65; /* 2π × 80 */
+      stroke-dashoffset: 502.65;
+      transform: rotate(-90deg);
+      transform-origin: center;
+      transition: stroke-dashoffset 0.4s ease;
+      filter: drop-shadow(0 0 8px var(--green));
+    }
+
+    .circle-text {
+      font-family: var(--font-mono);
+      font-size: 28px; font-weight: 700;
+      fill: var(--text);
+      dominant-baseline: middle;
+      text-anchor: middle;
+    }
+
+    .scan-status-label {
+      font-family: var(--font-mono);
+      font-size: 11px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.16em;
+      color: var(--text2);
+      display: flex; align-items: center; gap: 6px;
+    }
+
+    /* Botones de acción del escaneo */
+    .scan-actions {
+      display: flex; gap: 10px;
+    }
+
+    .btn-scan-start {
+      flex: 1; padding: 12px;
+      background: linear-gradient(90deg, var(--cyan2), #4a7fff);
+      border: none; border-radius: var(--radius);
+      color: #fff; font-family: var(--font-mono);
+      font-size: 12px; font-weight: 700;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      cursor: pointer; display: flex;
+      align-items: center; justify-content: center; gap: 8px;
+      transition: all 0.2s;
+      box-shadow: 0 0 20px #17c3f530;
+    }
+    .btn-scan-start:hover { box-shadow: 0 0 30px #17c3f560; }
+    .btn-scan-start:disabled {
+      background: var(--bg-elevated);
+      color: var(--text3); box-shadow: none; cursor: default;
+    }
+
+    /* ── Panel derecho — Log ── */
+    .scan-right { display: flex; flex-direction: column; gap: 16px; }
+
+    .log-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 18px;
+      flex: 1; display: flex; flex-direction: column;
+    }
+
+    .log-terminal {
+      background: var(--bg-void);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      height: 260px;
+      overflow-y: auto;
+      line-height: 1.7;
+      flex: 1;
+    }
+
+    .log-line { display: block; }
+    .log-line .log-idx {
+      color: var(--text3);
+      margin-right: 4px;
+    }
+    .log-line.ok    .log-msg { color: var(--text2); }
+    .log-line.warn  .log-msg { color: var(--orange); }
+    .log-line.done  .log-msg { color: var(--green); }
+    .log-line.alert .log-msg { color: var(--red); }
+
+    /* Resultado del escaneo */
+    .result-card {
+      background: #00e67610;
+      border: 1px solid #00e67630;
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      display: flex; align-items: flex-start; gap: 12px;
+    }
+
+    .result-card.has-threat {
+      background: #ff335510;
+      border-color: #ff335530;
+    }
+
+    .result-icon {
+      font-size: 18px; color: var(--green); flex-shrink: 0;
+    }
+    .result-card.has-threat .result-icon { color: var(--orange); }
+
+    .result-title {
+      font-family: var(--font-mono);
+      font-size: 12px; font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .result-sub {
+      font-family: var(--font-mono);
+      font-size: 10px; color: var(--text2);
+    }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon"><i class="fa-solid fa-shield-halved"></i></div>
+      <div class="brand-text">
+        <div class="brand-name">CYBERAUDIT</div>
+        <div class="brand-ver">PRO v2.4.1</div>
+      </div>
+    </div>
+    <div class="sidebar-status">
+      <div class="status-row"><span class="dot dot-green"></span> Sistema Operativo</div>
+      <div class="status-row"><span class="dot dot-cyan"></span> Monitoreo Activo</div>
+    </div>
+    <div class="sidebar-section-label">Módulos</div>
+    <nav>
+      <a href="dashboard.html" class="nav-item">
+        <i class="fa-solid fa-chart-line"></i> Dashboard <span class="rf-badge">RF2</span>
+      </a>
+      <a href="escaneo.html" class="nav-item active">
+        <i class="fa-solid fa-radar"></i> Escaneo <span class="rf-badge">RF3</span>
+      </a>
+      <a href="Controlador?accion=listar" class="nav-item">
+        <i class="fa-solid fa-triangle-exclamation"></i> Amenazas <span class="rf-badge rf-red">RF5</span>
+      </a>
+      <a href="reportes.html" class="nav-item">
+        <i class="fa-regular fa-file-lines"></i> Reportes <span class="rf-badge rf-green">RF6</span>
+      </a>
+      <a href="network.html" class="nav-item">
+        <i class="fa-solid fa-network-wired"></i> Red / Firewall <span class="rf-badge rf-purple">RF7</span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">admin@cyberaudit.com</div>
+      <button class="btn-logout" onclick="location.href='index.html'">
+        <i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión
+      </button>
+    </div>
+  </aside>
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="topbar-path">
+      <span class="prompt">&gt;</span>
+      <span class="path">/scan</span>
+      <span class="rf-badge">RF3</span>
+    </div>
+    <div class="topbar-spacer"></div>
+    <div class="topbar-status">
+      <span class="online-dot"></span><span>EN LÍNEA</span>
+    </div>
+    <div class="topbar-time">
+      <i class="fa-regular fa-clock"></i>
+      <span id="clock">--:--:--</span>
+    </div>
+  </header>
+
+  <!-- CONTENT -->
+  <main class="content">
+    <div class="page-title">
+      Módulo de Escaneo <span class="rf-badge" style="font-size:11px;vertical-align:middle;">RF3</span>
+    </div>
+
+    <div class="scan-layout">
+
+      <!-- ── PANEL IZQUIERDO ── -->
+      <div class="scan-left">
+
+        <!-- Tipo de escaneo -->
+        <div class="scan-types">
+          <div class="scan-type-card" id="card-rapido" onclick="selectScan('rapido')">
+            <span class="scan-type-icon"><i class="fa-solid fa-bolt"></i></span>
+            <span class="scan-type-name">Escaneo Rápido</span>
+            <span class="scan-type-desc">~2 min · Zonas críticas</span>
+          </div>
+          <div class="scan-type-card selected" id="card-completo" onclick="selectScan('completo')">
+            <span class="scan-type-icon"><i class="fa-solid fa-magnifying-glass"></i></span>
+            <span class="scan-type-name">Escaneo Completo</span>
+            <span class="scan-type-desc">~15 min · Sistema completo</span>
+          </div>
+        </div>
+
+        <!-- Círculo de progreso -->
+        <div class="progress-wrap">
+          <svg class="circle-svg" viewBox="0 0 180 180">
+            <circle class="circle-track" cx="90" cy="90" r="80"/>
+            <circle class="circle-fill" id="circle-fill" cx="90" cy="90" r="80"/>
+            <text class="circle-text" x="90" y="90" id="pct-text">0%</text>
+          </svg>
+          <div class="scan-status-label" id="scan-label">
+            <i class="fa-regular fa-circle"></i>
+            Listo para escanear
+          </div>
+        </div>
+
+        <!-- Botones -->
+        <div class="scan-actions">
+          <button class="btn-scan-start" id="btn-start" onclick="startScan()">
+            <i class="fa-solid fa-play"></i> Iniciar Escaneo
+          </button>
+          <button class="btn btn-ghost" onclick="resetScan()">
+            <i class="fa-solid fa-rotate-left"></i> Reiniciar
+          </button>
+        </div>
+      </div>
+
+      <!-- ── PANEL DERECHO ── -->
+      <div class="scan-right">
+
+        <!-- Log en tiempo real -->
+        <div class="log-card">
+          <div class="card-title">Log de Actividad en Tiempo Real</div>
+          <div class="log-terminal" id="log-terminal">
+            <span class="log-line ok">
+              <span class="log-idx">[--]</span>
+              <span class="log-msg">Esperando inicio de escaneo…</span>
+            </span>
+          </div>
+        </div>
+
+        <!-- Resultado (oculto al inicio) -->
+        <div class="result-card has-threat" id="result-card" style="display:none;">
+          <span class="result-icon"><i class="fa-solid fa-circle-check"></i></span>
+          <div>
+            <div class="result-title" id="result-title">—</div>
+            <div class="result-sub" id="result-sub">—</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+  /* ── Reloj ── */
+  function updateClock() {
+    document.getElementById('clock').textContent =
+      new Date().toLocaleTimeString('es-CO', { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true });
+  }
+  setInterval(updateClock, 1000); updateClock();
+
+  /* ── Selección de tipo de escaneo ── */
+  let scanType = 'completo';
+  function selectScan(type) {
+    scanType = type;
+    document.getElementById('card-rapido').classList.toggle('selected', type === 'rapido');
+    document.getElementById('card-completo').classList.toggle('selected', type === 'completo');
+  }
+
+  /* ── Lógica del escaneo ── */
+  const logLines = [
+    { cls:'ok',    idx:'00', msg:'Inicializando motor de análisis…' },
+    { cls:'ok',    idx:'01', msg:'Cargando firmas de malware [DB v4.21]…' },
+    { cls:'ok',    idx:'02', msg:'Escaneando /system/lib → OK' },
+    { cls:'ok',    idx:'03', msg:'Escaneando /usr/bin → OK' },
+    { cls:'ok',    idx:'04', msg:'Heurística conductual activada…' },
+    { cls:'alert', idx:'05', msg:'⚠ Objeto sospechoso en /tmp/x11.sh' },
+    { cls:'ok',    idx:'06', msg:'Escaneando registro del sistema…' },
+    { cls:'ok',    idx:'07', msg:'Analizando conexiones de red activas…' },
+    { cls:'ok',    idx:'08', msg:'Verificando integridad del kernel…' },
+    { cls:'done',  idx:'09', msg:'Escaneo completado.' },
+  ];
+
+  let scanning = false;
+
+  function startScan() {
+    if (scanning) return;
+    scanning = true;
+    const btn = document.getElementById('btn-start');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Escaneando…';
+    document.getElementById('result-card').style.display = 'none';
+
+    const terminal = document.getElementById('log-terminal');
+    terminal.innerHTML = '';
+
+    const fill     = document.getElementById('circle-fill');
+    const pctText  = document.getElementById('pct-text');
+    const label    = document.getElementById('scan-label');
+
+    const total = logLines.length;
+    let step    = 0;
+
+    label.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Escaneando…';
+    fill.style.stroke = '#17c3f5';
+
+    const interval = setInterval(() => {
+      if (step >= total) {
+        clearInterval(interval);
+        // Completado
+        scanning = false;
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-play"></i> Iniciar Escaneo';
+        fill.style.stroke = '#00e676';
+        fill.style.filter = 'drop-shadow(0 0 8px #00e676)';
+        label.innerHTML = '<i class="fa-solid fa-check"></i>&nbsp; ESCANEO COMPLETADO';
+        label.style.color = 'var(--green)';
+
+        // Mostrar resultado
+        const rc = document.getElementById('result-card');
+        rc.style.display = 'flex';
+        document.getElementById('result-title').textContent = '1 objeto sospechoso detectado en /tmp/x11.sh';
+        document.getElementById('result-sub').textContent = '→ Enviado a cuarentena automáticamente';
+        return;
+      }
+
+      const pct = Math.round(((step + 1) / total) * 100);
+      const dashOffset = 502.65 - (502.65 * pct / 100);
+      fill.style.strokeDashoffset = dashOffset;
+      pctText.textContent = pct + '%';
+
+      // Añadir línea de log
+      const line = logLines[step];
+      const span = document.createElement('span');
+      span.className = 'log-line ' + line.cls;
+      span.innerHTML = `<span class="log-idx">[${line.idx}]</span> <span class="log-msg">${line.msg}</span>`;
+      terminal.appendChild(span);
+      terminal.scrollTop = terminal.scrollHeight;
+
+      step++;
+    }, 280);
+  }
+
+  function resetScan() {
+    if (scanning) return;
+    document.getElementById('circle-fill').style.strokeDashoffset = '502.65';
+    document.getElementById('circle-fill').style.stroke = '#00e676';
+    document.getElementById('pct-text').textContent = '0%';
+    document.getElementById('scan-label').innerHTML = '<i class="fa-regular fa-circle"></i> Listo para escanear';
+    document.getElementById('scan-label').style.color = '';
+    document.getElementById('result-card').style.display = 'none';
+    document.getElementById('log-terminal').innerHTML =
+      '<span class="log-line ok"><span class="log-idx">[--]</span><span class="log-msg"> Esperando inicio de escaneo…</span></span>';
+  }
+</script>
+</body>
+</html>

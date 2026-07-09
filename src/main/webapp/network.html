@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>CYBERAUDIT PRO — Red / Firewall</title>
+  <link rel="stylesheet" href="cyberaudit.css"/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    /* ── KPIs de red × 4 (2+2) ── */
+    .net-kpi-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+
+    .net-kpi {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 20px 22px;
+      display: flex; flex-direction: column;
+      gap: 4px;
+    }
+
+    .net-kpi-value {
+      font-family: var(--font-ui);
+      font-size: 34px; font-weight: 700;
+      line-height: 1;
+    }
+
+    .net-kpi-label {
+      font-family: var(--font-mono);
+      font-size: 10px; color: var(--text2);
+      margin-top: 2px;
+    }
+
+    /* ── Tabla de reglas de firewall ── */
+    .fw-section {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      margin-bottom: 18px;
+      overflow: hidden;
+    }
+
+    .fw-section-header {
+      display: flex; align-items: center; gap: 8px;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      font-family: var(--font-ui);
+      font-size: 14px; font-weight: 600;
+      color: var(--text);
+    }
+
+    .fw-section-header i { color: var(--cyan); font-size: 14px; }
+
+    /* Badge de dirección */
+    .dir-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 9px; border-radius: 5px;
+      font-family: var(--font-mono);
+      font-size: 10px; font-weight: 700;
+    }
+    .dir-badge.in  { background:#17c3f518; color:var(--cyan);   border:1px solid #17c3f530; }
+    .dir-badge.out { background:#9b59ff18; color:var(--purple); border:1px solid #9b59ff30; }
+
+    /* Badge de acción */
+    .action-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 10px; border-radius: 5px;
+      font-family: var(--font-mono);
+      font-size: 10px; font-weight: 700;
+    }
+    .action-badge.allow { background:#00e67618; color:var(--green);  border:1px solid #00e67630; }
+    .action-badge.deny  { background:#ff335518; color:var(--red);    border:1px solid #ff335530; }
+
+    /* Toggle de estado en tabla */
+    .state-toggle {
+      display: inline-flex; align-items: center; gap: 5px;
+      font-family: var(--font-mono);
+      font-size: 10px; font-weight: 700;
+      color: var(--green);
+    }
+
+    .mini-toggle {
+      display: inline-block;
+      width: 28px; height: 14px;
+      background: #00e67620; border: 1px solid #00e67640;
+      border-radius: 14px; position: relative;
+      cursor: pointer;
+    }
+    .mini-toggle::after {
+      content: '';
+      position: absolute; top: 1px; right: 2px;
+      width: 10px; height: 10px;
+      border-radius: 50%; background: var(--green);
+      box-shadow: 0 0 5px var(--green);
+    }
+
+    /* ── Estado de Puertos ── */
+    .ports-section {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .ports-section-header {
+      display: flex; align-items: center; gap: 8px;
+      padding: 14px 18px;
+      border-bottom: 1px solid var(--border);
+      font-family: var(--font-ui);
+      font-size: 14px; font-weight: 600;
+      color: var(--text);
+    }
+
+    .ports-section-header i { color: var(--cyan); }
+
+    .ports-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      background: var(--border);
+    }
+
+    .port-card {
+      background: var(--bg-card);
+      padding: 18px 20px;
+      transition: background 0.15s;
+      position: relative;
+    }
+
+    .port-card:hover { background: var(--bg-elevated); }
+
+    .port-dot {
+      position: absolute; top: 14px; right: 14px;
+      width: 8px; height: 8px; border-radius: 50%;
+    }
+
+    .port-num {
+      font-family: var(--font-mono);
+      font-size: 22px; font-weight: 700;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+
+    .port-name {
+      font-family: var(--font-mono);
+      font-size: 10px; color: var(--text2);
+      margin-bottom: 10px;
+    }
+
+    .port-status-row {
+      display: flex; justify-content: space-between;
+      align-items: center;
+    }
+
+    .port-state {
+      font-family: var(--font-mono);
+      font-size: 11px; font-weight: 700;
+    }
+
+    .port-risk {
+      font-family: var(--font-mono);
+      font-size: 10px; font-weight: 700;
+    }
+
+    .port-conns {
+      font-family: var(--font-mono);
+      font-size: 10px; color: var(--text3);
+      margin-top: 5px;
+    }
+
+    /* Colores según estado de puerto */
+    .port-open    .port-state  { color: var(--green); }
+    .port-closed  .port-state  { color: var(--text3); }
+    .port-filtered .port-state { color: var(--orange); }
+
+    .port-risk.critical { color: var(--red); }
+    .port-risk.high     { color: var(--orange); }
+    .port-risk.medium   { color: var(--yellow); }
+    .port-risk.low      { color: var(--green); }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-icon"><i class="fa-solid fa-shield-halved"></i></div>
+      <div class="brand-text">
+        <div class="brand-name">CYBERAUDIT</div>
+        <div class="brand-ver">PRO v2.4.1</div>
+      </div>
+    </div>
+    <div class="sidebar-status">
+      <div class="status-row"><span class="dot dot-green"></span> Sistema Operativo</div>
+      <div class="status-row"><span class="dot dot-cyan"></span> Monitoreo Activo</div>
+    </div>
+    <div class="sidebar-section-label">Módulos</div>
+    <nav>
+      <a href="dashboard.html" class="nav-item">
+        <i class="fa-solid fa-chart-line"></i> Dashboard <span class="rf-badge">RF2</span>
+      </a>
+      <a href="escaneo.html" class="nav-item">
+        <i class="fa-solid fa-radar"></i> Escaneo <span class="rf-badge">RF3</span>
+      </a>
+      <a href="Controlador?accion=listar" class="nav-item">
+        <i class="fa-solid fa-triangle-exclamation"></i> Amenazas <span class="rf-badge rf-red">RF5</span>
+      </a>
+      <a href="reportes.html" class="nav-item">
+        <i class="fa-regular fa-file-lines"></i> Reportes <span class="rf-badge rf-green">RF6</span>
+      </a>
+      <a href="network.html" class="nav-item active">
+        <i class="fa-solid fa-network-wired"></i> Red / Firewall <span class="rf-badge rf-purple">RF7</span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="sidebar-user">admin@cyberaudit.com</div>
+      <button class="btn-logout" onclick="location.href='index.html'">
+        <i class="fa-solid fa-right-from-bracket"></i> Cerrar sesión
+      </button>
+    </div>
+  </aside>
+
+  <!-- TOPBAR -->
+  <header class="topbar">
+    <div class="topbar-path">
+      <span class="prompt">&gt;</span>
+      <span class="path">/network</span>
+      <span class="rf-badge rf-purple">RF7</span>
+    </div>
+    <div class="topbar-spacer"></div>
+    <div class="topbar-status">
+      <span class="online-dot"></span><span>EN LÍNEA</span>
+    </div>
+    <div class="topbar-time">
+      <i class="fa-regular fa-clock"></i>
+      <span id="clock">--:--:--</span>
+    </div>
+  </header>
+
+  <!-- CONTENT -->
+  <main class="content">
+    <div class="page-title">
+      Configuración de Red / Firewall
+      <span class="rf-badge rf-purple" style="font-size:11px;vertical-align:middle;">RF7</span>
+    </div>
+
+    <!-- KPIs de red -->
+    <div class="net-kpi-grid">
+      <div class="net-kpi">
+        <div class="net-kpi-value text-cyan">17</div>
+        <div class="net-kpi-label">Conexiones Activas</div>
+      </div>
+      <div class="net-kpi">
+        <div class="net-kpi-value text-red">1,247</div>
+        <div class="net-kpi-label">Paquetes Bloqueados (24h)</div>
+      </div>
+      <div class="net-kpi">
+        <div class="net-kpi-value" style="color:var(--green);">5</div>
+        <div class="net-kpi-label">Reglas Activas</div>
+      </div>
+      <div class="net-kpi">
+        <div class="net-kpi-value" style="color:var(--purple);">4</div>
+        <div class="net-kpi-label">Interfaces Monitoreadas</div>
+      </div>
+    </div>
+
+    <!-- Tabla de reglas de firewall -->
+    <div class="fw-section">
+      <div class="fw-section-header">
+        <i class="fa-solid fa-sitemap"></i>
+        Reglas de Firewall (Entrada / Salida)
+        <span class="rf-badge rf-purple">RF7</span>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Dirección</th>
+              <th>Protocolo</th>
+              <th>Puerto</th>
+              <th>Origen/Destino</th>
+              <th>Acción</th>
+              <th>Estado</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="mono" style="color:var(--text3);">01</td>
+              <td><span class="dir-badge in">Entrada</span></td>
+              <td>TCP</td>
+              <td class="mono" style="color:var(--text);">443</td>
+              <td>0.0.0.0/0</td>
+              <td><span class="action-badge allow">Permitir</span></td>
+              <td>
+                <div class="state-toggle">
+                  <span class="mini-toggle"></span> ON
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td class="mono" style="color:var(--text3);">02</td>
+              <td><span class="dir-badge in">Entrada</span></td>
+              <td>TCP</td>
+              <td class="mono" style="color:var(--text);">22</td>
+              <td>192.168.1.0/24</td>
+              <td><span class="action-badge allow">Permitir</span></td>
+              <td>
+                <div class="state-toggle">
+                  <span class="mini-toggle"></span> ON
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td class="mono" style="color:var(--text3);">03</td>
+              <td><span class="dir-badge in">Entrada</span></td>
+              <td>TCP</td>
+              <td class="mono" style="color:var(--text);">23</td>
+              <td>0.0.0.0/0</td>
+              <td><span class="action-badge deny">Denegar</span></td>
+              <td>
+                <div class="state-toggle">
+                  <span class="mini-toggle"></span> ON
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td class="mono" style="color:var(--text3);">04</td>
+              <td><span class="dir-badge out">Salida</span></td>
+              <td>UDP</td>
+              <td class="mono" style="color:var(--text);">53</td>
+              <td>0.0.0.0/0</td>
+              <td><span class="action-badge allow">Permitir</span></td>
+              <td>
+                <div class="state-toggle">
+                  <span class="mini-toggle"></span> ON
+                </div>
+              </td>
+            </tr>
+            <tr>
+              <td class="mono" style="color:var(--text3);">05</td>
+              <td><span class="dir-badge out">Salida</span></td>
+              <td>TCP</td>
+              <td class="mono" style="color:var(--text);">80</td>
+              <td>0.0.0.0/0</td>
+              <td><span class="action-badge allow">Permitir</span></td>
+              <td>
+                <div class="state-toggle">
+                  <span class="mini-toggle"></span> ON
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Estado de Puertos -->
+    <div class="ports-section">
+      <div class="ports-section-header">
+        <i class="fa-solid fa-globe"></i>
+        Estado de Puertos
+      </div>
+      <div class="ports-grid">
+
+        <!-- Puerto 22 / SSH -->
+        <div class="port-card port-open">
+          <span class="port-dot" style="background:var(--green);box-shadow:0 0 6px var(--green);"></span>
+          <div class="port-num">22</div>
+          <div class="port-name">SSH</div>
+          <div class="port-status-row">
+            <span class="port-state">Abierto</span>
+            <span class="port-risk medium">Medio</span>
+          </div>
+          <div class="port-conns">1 conexión(es)</div>
+        </div>
+
+        <!-- Puerto 80 / HTTP -->
+        <div class="port-card port-closed">
+          <span class="port-dot" style="background:var(--text3);"></span>
+          <div class="port-num">80</div>
+          <div class="port-name">HTTP</div>
+          <div class="port-status-row">
+            <span class="port-state">Cerrado</span>
+            <span class="port-risk low">Bajo</span>
+          </div>
+          <div class="port-conns">0 conexión(es)</div>
+        </div>
+
+        <!-- Puerto 443 / HTTPS -->
+        <div class="port-card port-open">
+          <span class="port-dot" style="background:var(--green);box-shadow:0 0 6px var(--green);"></span>
+          <div class="port-num">443</div>
+          <div class="port-name">HTTPS</div>
+          <div class="port-status-row">
+            <span class="port-state">Abierto</span>
+            <span class="port-risk low">Bajo</span>
+          </div>
+          <div class="port-conns">14 conexión(es)</div>
+        </div>
+
+        <!-- Puerto 8080 / Alt-HTTP -->
+        <div class="port-card port-filtered">
+          <span class="port-dot" style="background:var(--text3);"></span>
+          <div class="port-num">8080</div>
+          <div class="port-name">Alt-HTTP</div>
+          <div class="port-status-row">
+            <span class="port-state">Filtrado</span>
+            <span class="port-risk high">Alto</span>
+          </div>
+          <div class="port-conns">0 conexión(es)</div>
+        </div>
+
+        <!-- Puerto 3306 / MySQL -->
+        <div class="port-card port-closed">
+          <span class="port-dot" style="background:var(--text3);"></span>
+          <div class="port-num">3306</div>
+          <div class="port-name">MySQL</div>
+          <div class="port-status-row">
+            <span class="port-state">Cerrado</span>
+            <span class="port-risk low">Bajo</span>
+          </div>
+          <div class="port-conns">0 conexión(es)</div>
+        </div>
+
+        <!-- Puerto 6379 / Redis -->
+        <div class="port-card port-open">
+          <span class="port-dot" style="background:var(--green);box-shadow:0 0 6px var(--green);"></span>
+          <div class="port-num">6379</div>
+          <div class="port-name">Redis</div>
+          <div class="port-status-row">
+            <span class="port-state">Abierto</span>
+            <span class="port-risk critical">Crítico</span>
+          </div>
+          <div class="port-conns">2 conexión(es)</div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+  setInterval(() => {
+    document.getElementById('clock').textContent =
+      new Date().toLocaleTimeString('es-CO', { hour:'2-digit', minute:'2-digit', second:'2-digit', hour12:true });
+  }, 1000);
+</script>
+</body>
+</html>
