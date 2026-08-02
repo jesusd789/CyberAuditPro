@@ -1,0 +1,7 @@
+# Use this workspace to collaborate
+workspace:
+  id: 86637bee-9c45-4fe0-ae78-b03bdef16538
+
+localResources:
+  collections:
+    - ../CyberAuditPro-SpringBoot/CyberAuditPro-SpringBoot/postman_collection.json

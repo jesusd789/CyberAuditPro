@@ -1,0 +1,76 @@
+{
+  "info": {
+    "name": "CyberAuditPro API - CRUD Usuarios",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "http://localhost:8080" }
+  ],
+  "item": [
+    {
+      "name": "1. Crear usuario (POST)",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Jesus Duarte\",\n  \"correo\": \"jesus.duarte@correo.com\",\n  \"contrasena\": \"clave123\",\n  \"idRol\": 1\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/usuarios",
+          "host": ["{{base_url}}"],
+          "path": ["api", "usuarios"]
+        }
+      }
+    },
+    {
+      "name": "2. Listar todos (GET)",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{base_url}}/api/usuarios",
+          "host": ["{{base_url}}"],
+          "path": ["api", "usuarios"]
+        }
+      }
+    },
+    {
+      "name": "3. Consultar por id (GET)",
+      "request": {
+        "method": "GET",
+        "url": {
+          "raw": "{{base_url}}/api/usuarios/1",
+          "host": ["{{base_url}}"],
+          "path": ["api", "usuarios", "1"]
+        }
+      }
+    },
+    {
+      "name": "4. Actualizar (PUT)",
+      "request": {
+        "method": "PUT",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nombre\": \"Jesus Duarte Actualizado\",\n  \"correo\": \"jesus.duarte@correo.com\",\n  \"contrasena\": \"claveNueva456\",\n  \"idRol\": 1\n}"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/usuarios/1",
+          "host": ["{{base_url}}"],
+          "path": ["api", "usuarios", "1"]
+        }
+      }
+    },
+    {
+      "name": "5. Eliminar (DELETE)",
+      "request": {
+        "method": "DELETE",
+        "url": {
+          "raw": "{{base_url}}/api/usuarios/1",
+          "host": ["{{base_url}}"],
+          "path": ["api", "usuarios", "1"]
+        }
+      }
+    }
+  ]
+}
